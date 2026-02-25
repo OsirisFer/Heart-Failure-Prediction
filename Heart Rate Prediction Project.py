@@ -7,6 +7,13 @@ from scipy.signal import find_peaks  # detector de picos en señales
 chf_path = os.path.join("pacientes con ataque", "chf201.ecg")
 nsr_path = os.path.join("pacientes sin ataque", "nsr001.ecg")
 
+"""
+os es un módulo de Python para interactuar con el sistema operativo. 
+path es un submódulo de os que tiene funciones para manejar rutas de archivos.
+join es una función que toma partes de una ruta y las une de forma correcta para el sistema
+
+"""
+
 # 2) fs: 128 muestras/segundo (sale de tu .hea)
 fs = 128
 
@@ -15,6 +22,7 @@ def load_ecg_binary(path):
     Lee un archivo binario .ecg interpretándolo como int16.
     """
     return np.fromfile(path, dtype=np.int16)
+
 
 def detect_beats(signal, fs):
     """
@@ -44,11 +52,13 @@ def detect_beats(signal, fs):
 
     return peaks, abs_sig, height_threshold
 
-def plot_with_peaks(signal, fs, peaks, title, seconds=10):
+def plot_with_peaks(signal, fs, peaks, title):
     """
     Grafica los primeros 'seconds' segundos y marca los picos detectados.
     """
-    n = int(fs * seconds)
+    if isinstance(peaks, tuple):
+        peaks = peaks[0]
+    n = int(fs * 10)
     y = signal[:n]
     x = np.arange(len(y)) / fs
 
@@ -74,12 +84,13 @@ def rr_intervals_seconds(peaks, fs):
     rr = np.diff(beat_times)
 
     return rr
+    
 
-if __name__ == "__main__":
+if __name__ == "__main__": #ejecutame si soy el programa principal, no me importes como módulo
     # --- CHF ---
-    chf = load_ecg_binary(chf_path)
-    chf_peaks, chf_abs, chf_thr = detect_beats(chf, fs)
-    chf_rr = rr_intervals_seconds(chf_peaks, fs)
+    chf = load_ecg_binary(chf_path) #carga el archivo binario .ecg como un array de int16
+    chf_peaks = detect_beats(chf, fs) 
+    chf_rr = rr_intervals_seconds(chf_peaks[0], fs)
 
     print("CHF: picos detectados:", len(chf_peaks))
     if len(chf_rr) > 0:
