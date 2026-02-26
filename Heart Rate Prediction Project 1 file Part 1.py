@@ -88,10 +88,25 @@ def rr_intervals_seconds(peaks, fs):
 
 if __name__ == "__main__": #ejecutame si soy el programa principal, no me importes como módulo
     # --- CHF ---
-    chf = load_ecg_binary(chf_path) #carga el archivo binario .ecg como un array de int16
-    chf_peaks = detect_beats(chf, fs) 
+    chf = load_ecg_binary(chf_path) # transformamos el archivo binario en un array de numeros para poder usarlo 
+    chf_peaks = detect_beats(chf, fs) #cada numero del array representa la amplitud del ECG en cada instante, pero son mediciones todavia
+    """
+    Como el ECG marca para arriba y para abajo, necesitamos hacer el valor absoluto para tener todos numeros positivos, tambien nos quedamos con 
+    los picos grandes (el percentil 99). Porque la mayoria son mediciones hallamos los maximos digamos, los latidos
+    Tambien definimos una disntancia minima entre picos para evitar detectar el mismo latido dos veces
+    detect_beats entonces nos devuelve posiciones de array, es decir donde ocurrio cada latido, no el valor en si
+    plot_with_peaks asegura el funcionamiento
+    """
     chf_rr = rr_intervals_seconds(chf_peaks[0], fs)
-
+    """
+    ahora con los indices de los latidos, pasamos de ECG a ritmo cardiaco, usamos el valor de los indices y los convertimos a tiempo real, 
+    como veniamos usadno 1/128 segundos dividimos sobre 128 para volver a segundos entonces 
+    peaks = [512, 640, 768]
+    dividido por 128 da:
+    beat_times = [4.0, 5.0, 6.0] segundos
+    esto nos dice que hubo latidos en 4 5 y 6, aplico np.diff [5.0 - 4.0, 6.0 - 5.0] → [1.0, 1.0]
+    eso nos da el tiempo entre latidos
+    """
     print("CHF: picos detectados:", len(chf_peaks))
     if len(chf_rr) > 0:
         print("CHF: RR promedio (s):", float(np.mean(chf_rr)))
@@ -110,3 +125,5 @@ if __name__ == "__main__": #ejecutame si soy el programa principal, no me import
         print("NSR: RR variación (std):", float(np.std(nsr_rr)))
 
     plot_with_peaks(nsr, fs, nsr_peaks, "NSR nsr001 - 10s con picos")
+
+    
